@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Local scratch files
+*.local
+*.local.*
+
+# Cloned repos used for skill comparison
+tmp/
