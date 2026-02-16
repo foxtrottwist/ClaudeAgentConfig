@@ -36,10 +36,12 @@ Consult these skills in `skills/` for detailed guidance. Read the SKILL.md (and 
 - Enable strict concurrency checking — resolve all warnings
 - Use `localizedStandardContains()` for user-facing string searches
 - Minimize force unwraps (`!`) and force tries (`try!`) — use `guard`, `if let`, or `try?`
+- Use typed throws (`async throws(MyError)`) for functions with predictable failure modes — avoid `Result` types with async/await
 - Use modern Foundation APIs: `AttributedString`, `FormatStyle`, `Duration`, `Regex`
 - Prefer `String(localized:)` over `NSLocalizedString`
 - Use `sending` parameter annotation where appropriate for concurrency safety
 - Mark types as `Sendable` when they cross isolation boundaries
+- `os.Logger` string interpolation — see Logging section for details
 
 ## SwiftUI Rules
 
@@ -53,8 +55,9 @@ Consult these skills in `skills/` for detailed guidance. Read the SKILL.md (and 
 - Prefer `containerRelativeFrame()` and `visualEffect()` over `GeometryReader` when possible
 - Use `bold()` over `fontWeight(.bold)`
 - Use `scrollIndicators(.hidden)` to hide scroll indicators
-- Use `ForEach` with `Array.enumerated()` and explicit `id:` when index is needed
+- Use `ForEach(items.enumerated(), id: \.element.id)` when index is needed — do not wrap in `Array()`
 - Use `scrollTargetBehavior(.viewAligned)` and `scrollTargetLayout()` for snap scrolling
+- `Section("Title") { } footer: { }` doesn't compile — use `Section { } header: { Text("Title") } footer: { }` when both header and footer are needed
 
 ## State Management
 
@@ -64,6 +67,30 @@ Consult these skills in `skills/` for detailed guidance. Read the SKILL.md (and 
 - Use `@Bindable` to create bindings from an `@Observable` object's properties
 - Use `@Environment` to inject shared dependencies (model contexts, services, settings)
 - When a decision has 3+ branches, centralize the logic in a private `enum` — keeps switch statements exhaustive and easy to extend
+
+## Logging
+
+Use `os.Logger` exclusively — no `print()` or `NSLog()`. Centralize categories in a `Logger` extension file with `static nonisolated let` properties.
+
+- **Setup:** Each file declares `private nonisolated let log = Logger.<category>` at file scope
+- **Categories:** One per service/feature area — add new ones to the centralized Logger extension
+
+**Log levels:**
+- `debug` — verbose events useful only when investigating (button taps, view show/hide)
+- `info` — operational milestones and timing (service started, operation completed)
+- `warning` — recoverable issues or fallbacks taken (unsupported config, retry needed)
+- `error` — failures that stop an operation (permission denied, resource unavailable)
+- `fault` — system-level corruption only
+
+**When to log:**
+- Service entry/exit points and state transitions
+- Timing-sensitive paths — include elapsed ms where performance matters
+- Error/failure branches — always log before throwing or returning early
+- Hardware/device changes and retry attempts
+
+**Gotchas:**
+- `os.Logger` interpolation evaluates in a closure context — `@Observable` properties need explicit `self.` (e.g., `log.info("value: \(self.someProperty)")`)
+- File-scope `private let log = Logger(...)` inherits MainActor isolation when `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` — use `private nonisolated let` to opt out
 
 ## SwiftData Rules
 
@@ -86,13 +113,33 @@ Consult these skills in `skills/` for detailed guidance. Read the SKILL.md (and 
 - Use `.accessibilityLabel()`, `.accessibilityHint()`, `.accessibilityValue()` appropriately
 - Group related elements with `.accessibilityElement(children: .combine)`
 
+## Build & Test
+
+Xcode MCP server is connected. Prefer MCP tools over CLI commands.
+
+- **Build:** `BuildProject` via Xcode MCP (fallback: `xcodebuild -scheme <Scheme> -destination 'platform=macOS'`)
+- **Run all tests:** `RunAllTests` via Xcode MCP
+- **Run specific tests:** `RunSomeTests` via Xcode MCP with test identifiers (e.g., `<TestTarget>/<Suite>/<testName>`)
+- **Get build errors:** `GetBuildLog` with severity filter after a failed build
+- **List test targets:** `GetTestList` via Xcode MCP
+
 ## Project Structure
 
-- New files use `// Created by Law Horne on <date>` in the file header
+- New files use the full Xcode file header template:
+  ```swift
+  //
+  //  FileName.swift
+  //  ProjectName
+  //
+  //  Created by Law Horne on M/d/yy.
+  //
+  ```
 - Organize by feature, not by type (e.g., `Features/Profile/` not `Views/`, `Models/`)
 - One type per file — file name matches type name
 - Unit tests for all core logic and data transformations
 - UI tests only when unit tests are insufficient for the behavior
+- Test files: `FooTests.swift` for `Foo.swift`, use `@Suite struct` and `@Test func` (no `test` prefix)
+- Use `#Preview { }` macro for all previews — provide dependencies via `.environment()` or `.modelContainer()`
 - Never commit secrets, API keys, or credentials to the repo
 
 ## Git Conventions

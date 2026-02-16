@@ -100,18 +100,23 @@ struct ItemRow: View {
 
 ## Enumerated Sequences
 
-**Always convert enumerated sequences to arrays. To be able to use them in a ForEach.**
+**Use `enumerated()` directly in ForEach — do not wrap in `Array()`.** Swift 6.2 (SE-0459) gives `EnumeratedSequence` full `Collection` conformance.
 
 ```swift
 let items = ["A", "B", "C"]
 
-// Correct
-ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+// Correct — direct enumerated, stable identity
+ForEach(items.enumerated(), id: \.element.id) { index, item in
     Text("\(index): \(item)")
 }
 
-// Wrong - Doesn't compile, enumerated() isn't an array
+// Also correct — offset-based identity for non-Identifiable items
 ForEach(items.enumerated(), id: \.offset) { index, item in
+    Text("\(index): \(item)")
+}
+
+// Wrong — unnecessary Array() wrapper
+ForEach(Array(items.enumerated()), id: \.offset) { index, item in
     Text("\(index): \(item)")
 }
 ```
@@ -148,6 +153,6 @@ List(items) { item in
 - [ ] Constant number of views per ForEach element
 - [ ] No inline filtering in ForEach (prefilter and cache instead)
 - [ ] No `AnyView` in list rows
-- [ ] Don't convert enumerated sequences to arrays
+- [ ] Use `enumerated()` directly — no `Array()` wrapper (SE-0459)
 - [ ] Use `.refreshable` for pull-to-refresh
 - [ ] Custom list styling uses appropriate modifiers
