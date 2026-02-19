@@ -87,6 +87,12 @@ When a developer needs concurrency guidance, follow this decision tree:
 
 ## Triage-First Playbook (Common Errors -> Next Best Move)
 
+**Pre-scan:** Before triaging manually, run the shared lint script to pre-identify known anti-patterns:
+```
+../../scripts/swift-pattern-lint.sh <project-dir> references/lint-patterns.json
+```
+Use the report to jump directly to the relevant reference file for each finding category. Known anti-patterns from the report are confirmed violations — focus triage time on ambiguous cases.
+
 - SwiftLint concurrency-related warnings
   - Use `references/linting.md` for rule intent and preferred fixes; avoid dummy awaits as “fixes”.
 - SwiftLint `async_without_await` warning

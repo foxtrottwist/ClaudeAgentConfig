@@ -11,6 +11,11 @@ Use this skill to build, review, or improve SwiftUI features with correct state 
 ## Workflow Decision Tree
 
 ### 1) Review existing SwiftUI code
+- Before manual review, run the shared lint script to produce a pre-review report:
+  ```
+  ../../scripts/swift-pattern-lint.sh <project-dir> references/lint-patterns.json
+  ```
+  Items flagged in the report are confirmed violations — skip inference on those. Focus review on judgment items (architecture decisions, performance implications, animation quality).
 - Check property wrapper usage against the selection guide (see `references/state-management.md`)
 - Verify modern API usage (see `references/modern-apis.md`)
 - Verify view composition follows extraction rules (see `references/view-structure.md`)
@@ -264,6 +269,7 @@ Button("Confirm") { }
 - [ ] Shapes and tints consistent across related elements
 
 ## References
+- `references/lint-patterns.json` - Grep patterns for automated pre-review lint via `swift-pattern-lint.sh`
 - `references/state-management.md` - Property wrappers and data flow (prefer `@Observable`)
 - `references/view-structure.md` - View composition, extraction, and container patterns
 - `references/performance-patterns.md` - Performance optimization techniques and anti-patterns

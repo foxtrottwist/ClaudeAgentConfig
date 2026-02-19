@@ -25,6 +25,14 @@ Systematic accessibility diagnosis and remediation for iOS/macOS apps. Covers th
 - Preparing for App Store Review accessibility requirements
 - Responding to user complaints about accessibility
 
+## Pre-Scan
+
+Before manual diagnosis, run the shared lint script to identify files with potential accessibility violations:
+```
+../../scripts/swift-pattern-lint.sh <project-dir> references/lint-patterns.json
+```
+The report narrows the manual review scope. Focus diagnosis on contextual analysis — is this image decorative? Is the small frame justified? Is the animation essential? — rather than pattern detection.
+
 ## The 7 Critical Accessibility Issues
 
 ### 1. VoiceOver Labels & Hints (CRITICAL - App Store Rejection)
